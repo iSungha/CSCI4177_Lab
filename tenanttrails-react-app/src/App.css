@@ -354,6 +354,15 @@
   font-weight: 800;
   display: grid;
   place-items: center;
+  flex-shrink: 0;
+}
+
+.avatar-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #0f172a;
+  text-decoration: none;
 }
 
 .dashboard-user button {
@@ -434,7 +443,18 @@
 .apartment-grid {
   display: grid;
   grid-template-columns: repeat(3, 280px);
-  gap: 14px 14px;
+  gap: 14px;
+}
+
+.apartment-card-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.apartment-card-link:hover .apartment-card {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.1);
 }
 
 .apartment-card {
@@ -444,6 +464,7 @@
   border: 1px solid #dde5ef;
   border-radius: 10px;
   background: #ffffff;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .apartment-image-wrap {
@@ -534,20 +555,477 @@
   letter-spacing: 1px;
 }
 
+.star-filled {
+  color: #f5b301;
+}
+
+.star-empty {
+  color: #cbd5e1;
+}
+
 .empty-state {
   color: #7b8794;
   font-size: 13px;
 }
 
+/* Lab 3: Apartment detail */
+
+.detail-content,
+.profile-content {
+  width: 880px;
+  margin: 0 auto;
+  padding-top: 26px;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 18px;
+  color: #2563eb;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.apartment-detail-header,
+.profile-header-card {
+  background: #ffffff;
+  border: 1px solid #dde5ef;
+  border-radius: 10px;
+  padding: 22px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.apartment-detail-header h1,
+.profile-header-card h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+}
+
+.detail-address,
+.detail-description,
+.profile-header-card p {
+  margin: 7px 0 0;
+  color: #7b8794;
+  font-size: 12px;
+}
+
+.detail-rating {
+  text-align: center;
+}
+
+.detail-rating strong {
+  display: block;
+  color: #2563eb;
+  font-size: 36px;
+  line-height: 1;
+}
+
+.detail-rating .stars {
+  display: block;
+  margin-top: 4px;
+}
+
+.detail-rating > span {
+  display: block;
+  color: #7b8794;
+  font-size: 11px;
+  margin-top: 4px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 250px;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.ai-summary-card,
+.property-card,
+.reviews-section,
+.profile-review-item {
+  background: #ffffff;
+  border: 1px solid #dde5ef;
+  border-radius: 10px;
+  padding: 18px;
+}
+
+.section-eyebrow {
+  margin: 0 0 10px;
+  color: #2563eb;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.ai-summary-card p {
+  color: #334155;
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.detail-tags span {
+  border-radius: 999px;
+  background: #eaf3ff;
+  color: #2563eb;
+  padding: 5px 10px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.property-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.property-card h3 {
+  margin: 0 0 14px;
+  font-size: 13px;
+}
+
+.property-card dl {
+  margin: 0;
+}
+
+.property-card dl > div {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.property-card dt {
+  color: #7b8794;
+  font-size: 11px;
+}
+
+.property-card dd {
+  margin: 0;
+  color: #0f172a;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.rating-row {
+  display: grid;
+  grid-template-columns: 24px 1fr 16px;
+  align-items: center;
+  gap: 8px;
+  color: #7b8794;
+  font-size: 11px;
+  margin-bottom: 8px;
+}
+
+.rating-line {
+  height: 6px;
+  border-radius: 999px;
+  background: #e5eaf2;
+  overflow: hidden;
+}
+
+.rating-line div {
+  height: 100%;
+  background: #2563eb;
+}
+
+.wide-review-btn,
+.submit-review-btn {
+  height: 36px;
+  border: none;
+  border-radius: 7px;
+  background: #2563eb;
+  color: white;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+/* Reviews */
+
+.reviews-section {
+  margin-top: 18px;
+}
+
+.reviews-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.reviews-title-row h2,
+.profile-content h2 {
+  margin: 0 0 14px;
+  font-size: 16px;
+}
+
+.small-outline-btn {
+  height: 28px;
+  border: 1px solid #dde5ef;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.review-card {
+  border-top: 1px solid #eef2f7;
+  padding: 14px 0;
+  position: relative;
+}
+
+.review-card:first-of-type {
+  border-top: none;
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.review-header strong {
+  display: block;
+  color: #0f172a;
+  font-size: 13px;
+}
+
+.review-header span {
+  color: #7b8794;
+  font-size: 11px;
+}
+
+.review-card p {
+  margin: 10px 0 0;
+  color: #334155;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.delete-review-btn {
+  margin-top: 10px;
+  border: none;
+  background: #fff1f2;
+  color: #e11d48;
+  border-radius: 5px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Modal */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.52);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  backdrop-filter: blur(2px);
+}
+
+.modal-content {
+  width: 380px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.25);
+  padding: 22px;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.modal-header button {
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.modal-label {
+  display: block;
+  margin-bottom: 7px;
+  color: #374151;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.star-input {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 18px;
+}
+
+.star-input button {
+  border: none;
+  background: transparent;
+  color: #cbd5e1;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.star-input button.selected {
+  color: #f5b301;
+}
+
+.modal-content textarea {
+  width: 100%;
+  height: 92px;
+  border: 1px solid #dde5ef;
+  border-radius: 7px;
+  resize: vertical;
+  padding: 10px;
+  color: #0f172a;
+  font-size: 12px;
+  outline: none;
+}
+
+.modal-error {
+  color: #dc2626;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 16px;
+}
+
+.cancel-btn {
+  border: none;
+  background: transparent;
+  color: #475569;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* Profile */
+
+.profile-main {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.profile-avatar {
+  width: 54px;
+  height: 54px;
+  border-radius: 999px;
+  background: #dcecff;
+  color: #2563eb;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  font-size: 18px;
+}
+
+.profile-stats {
+  display: flex;
+  gap: 34px;
+  text-align: center;
+}
+
+.profile-stats strong {
+  display: block;
+  color: #2563eb;
+  font-size: 26px;
+}
+
+.profile-stats span {
+  color: #7b8794;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.profile-content h2 {
+  margin-top: 22px;
+}
+
+.profile-review-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.profile-review-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.profile-review-top h3 {
+  margin: 0;
+  font-size: 13px;
+}
+
+.profile-review-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profile-review-actions a,
+.profile-review-actions button {
+  border: none;
+  border-radius: 5px;
+  background: #f8fafc;
+  color: #2563eb;
+  padding: 5px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.profile-review-actions button:last-child {
+  background: #fff1f2;
+  color: #e11d48;
+}
+
 /* Responsive */
 
 @media (max-width: 950px) {
-  .dashboard-content {
+  .dashboard-content,
+  .detail-content,
+  .profile-content {
     width: calc(100% - 32px);
   }
 
   .apartment-grid {
     grid-template-columns: repeat(2, 280px);
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -596,5 +1074,16 @@
 
   .apartment-card {
     width: 100%;
+  }
+
+  .apartment-detail-header,
+  .profile-header-card {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .modal-content {
+    width: calc(100% - 32px);
   }
 }

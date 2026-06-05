@@ -1,8 +1,15 @@
-Figma design link: https://www.figma.com/design/uDDW7AMs9P4M7z1lng1AnQ/Lab1?node-id=0-1&p=f
+Figma design link: 
+- https://www.figma.com/design/uDDW7AMs9P4M7z1lng1AnQ/Lab1?node-id=0-1&p=f
 
-Figma prototype link: figma.com/proto/uDDW7AMs9P4M7z1lng1AnQ/Lab1?node-id=0-1&p=f&t=Hsj86WiB17UUAWTx-0&scaling=min-zoom&content-scaling=fixed&page-id=0%3A1&starting-point-node-id=1%3A810
+Figma prototype link:
+- figma.com/proto/uDDW7AMs9P4M7z1lng1AnQ/Lab1?node-id=0-1&p=f&t=Hsj86WiB17UUAWTx-0&scaling=min-zoom&content-scaling=fixed&page-id=0%3A1&starting-point-node-id=1%3A810
 
-Hosted Site's URL: https://csci-4177-lab1.vercel.app/
 
-- csci-4177-lab1-git-main-garrys-projects-f8201d07.vercel.app
-- csci-4177-lab1-kj2n6zeic-garrys-projects-f8201d07.vercel.app
+GitHub: 
+- https://github.com/iSungha/-CSCI4177_Lab2
+
+
+Hosted Site's URL:
+- https://csci-4177-lab2.vercel.app/
+- csci-4177-lab2-oyxdom7kz-garrys-projects-f8201d07.vercel.app
+- csci-4177-lab2-git-main-garrys-projects-f8201d07.vercel.app

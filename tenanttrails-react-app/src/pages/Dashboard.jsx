@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import ApartmentCard from "../components/ApartmentCard";
 import { apartments } from "../data/mockData";
 import { useAuth } from "../context/AuthContext";
@@ -8,6 +8,7 @@ function Dashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
   const [searchText, setSearchText] = useState("");
   const [neighbourhood, setNeighbourhood] = useState("All Neighbourhoods");
   const [sortBy, setSortBy] = useState("Highest Rated");
@@ -21,23 +22,27 @@ function Dashboard() {
 
   const filteredApartments = useMemo(() => {
     const normalizedSearch = searchText.trim().toLowerCase();
+
     let result = apartments.filter((apartment) => {
-      const matchesSearch = apartment.name.toLowerCase().includes(normalizedSearch) || apartment.address.toLowerCase().includes(normalizedSearch) ||apartment.neighbourhood.toLowerCase().includes(normalizedSearch);
-      const matchesNeighbourhood =neighbourhood === "All Neighbourhoods" || apartment.neighbourhood === neighbourhood;
+      const matchesSearch =
+        apartment.name.toLowerCase().includes(normalizedSearch) ||
+        apartment.address.toLowerCase().includes(normalizedSearch) ||
+        apartment.neighbourhood.toLowerCase().includes(normalizedSearch);
+
+      const matchesNeighbourhood =
+        neighbourhood === "All Neighbourhoods" ||
+        apartment.neighbourhood === neighbourhood;
+
       return matchesSearch && matchesNeighbourhood;
     });
+
     result = [...result].sort((a, b) => {
-      if (sortBy === "Highest Rated") {
-        return b.rating - a.rating;
-      }
-      if (sortBy === "Most Reviews") {
-        return b.reviews - a.reviews;
-      }
-      if (sortBy === "Name A-Z") {
-        return a.name.localeCompare(b.name);
-      }
+      if (sortBy === "Highest Rated") return b.rating - a.rating;
+      if (sortBy === "Most Reviews") return b.reviews - a.reviews;
+      if (sortBy === "Name A-Z") return a.name.localeCompare(b.name);
       return 0;
     });
+
     return result;
   }, [searchText, neighbourhood, sortBy]);
 
@@ -49,7 +54,9 @@ function Dashboard() {
   return (
     <main className="dashboard-page">
       <header className="dashboard-nav">
-        <div className="dashboard-logo">TenantTrails</div>
+        <Link to="/dashboard" className="dashboard-logo">
+          TenantTrails
+        </Link>
 
         <label className="search-bar">
           <span>⌕</span>
@@ -62,8 +69,10 @@ function Dashboard() {
         </label>
 
         <div className="dashboard-user">
-          <div className="avatar">{user?.name?.charAt(0) || "U"}</div>
-          <span>{user?.name}</span>
+          <Link to="/profile" className="avatar-link">
+            <div className="avatar">{user?.name?.charAt(0) || "U"}</div>
+            <span>{user?.name}</span>
+          </Link>
           <button type="button" onClick={handleLogout}>
             Sign out
           </button>

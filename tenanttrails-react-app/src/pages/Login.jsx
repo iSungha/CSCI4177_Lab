@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { validateLogin } from "../utils/validation";
 
 function Login() {
   const navigate = useNavigate();
@@ -10,28 +11,10 @@ function Login() {
   const [password, setPassword] = useState("password123");
   const [errors, setErrors] = useState({});
 
-  function validate() {
-    const nextErrors = {};
-
-    if (!email.trim()) {
-      nextErrors.email = "Email is required.";
-    } else if (!email.includes("@")) {
-      nextErrors.email = "Enter a valid email.";
-    }
-
-    if (!password) {
-      nextErrors.password = "Password is required.";
-    } else if (password.length < 6) {
-      nextErrors.password = "Password must be at least 6 characters.";
-    }
-
-    return nextErrors;
-  }
-
   function handleSubmit(event) {
     event.preventDefault();
 
-    const validationErrors = validate();
+    const validationErrors = validateLogin(email, password);
 
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -99,9 +82,7 @@ function Login() {
           Don&apos;t have an account? <Link to="/signup">Create one</Link>
         </p>
 
-        <div className="demo-box">
-          Demo: garrysangha@dal.ca / password123
-        </div>
+        <div className="demo-box">Demo: garrysangha@dal.ca / password123</div>
       </section>
     </main>
   );
