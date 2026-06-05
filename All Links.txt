@@ -6,10 +6,9 @@ Figma prototype link:
 
 
 GitHub: 
-- https://github.com/iSungha/-CSCI4177_Lab2
+- https://github.com/iSungha/CSCI4177_Lab
 
 
 Hosted Site's URL:
-- https://csci-4177-lab2.vercel.app/
-- csci-4177-lab2-oyxdom7kz-garrys-projects-f8201d07.vercel.app
-- csci-4177-lab2-git-main-garrys-projects-f8201d07.vercel.app
+- csci-4177-28ejwb70z-garrys-projects-f8201d07.vercel.app
+- csci-4177-lab.vercel.app

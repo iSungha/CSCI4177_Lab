@@ -1,16 +1,41 @@
-# React + Vite
+# TenantTrails React App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Lab 2 React app for TenantTrails.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Landing page
+- Sign In page with validation
+- Sign Up page with validation
+- AuthContext for shared user state
+- Protected Dashboard route
+- Dashboard with username and sign out
+- Apartment card grid
+- Search, neighbourhood filter, and sort
+- Mock local data source
 
-## React Compiler
+## Mock Data / No SQL Database
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+This lab version does not use a real SQL or NoSQL database.
 
-## Expanding the ESLint configuration
+The app uses:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- `src/data/mockData.js` as seed data
+- `localStorage` as a browser-based mock NoSQL database
+
+Default demo users are loaded from `mockData.js`. New accounts created through the Sign Up page are stored in `localStorage`.
+
+Demo login:
+
+- Email: `garrysangha@dal.ca`
+- Password: `password123`
+
+## Image Credits
+
+Apartment images are loaded from Unsplash image URLs for demo purposes.
+
+Unsplash License:
+https://unsplash.com/license
+
+Image source:
+https://unsplash.com/
