@@ -1,0 +1,28 @@
+[{
+  "_id": 1,
+  "name": "Alex Mitchell",
+  "email": "alex@dal.ca",
+  "password": "password123",
+  "initials": "AM"
+},
+{
+  "_id": 2,
+  "name": "Garry Sangha",
+  "email": "garrysangha@dal.ca",
+  "password": "password123",
+  "initials": "GS"
+},
+{
+  "_id": 3,
+  "name": "James Chen",
+  "email": "james@example.com",
+  "password": "pass123",
+  "initials": "JC"
+},
+{
+  "_id": 4,
+  "name": "Maya Patel",
+  "email": "maya@example.com",
+  "password": "pass123",
+  "initials": "MP"
+}]

@@ -1,0 +1,35 @@
+[{
+  "_id": 201,
+  "review_id": 101,
+  "user_id": 2,
+  "body": "How long was the parking wait when you moved in?",
+  "created": "2026-04-14"
+},
+{
+  "_id": 202,
+  "review_id": 101,
+  "user_id": 1,
+  "body": "It was about five months before I got a permanent spot.",
+  "created": "2026-04-15"
+},
+{
+  "_id": 203,
+  "review_id": 103,
+  "user_id": 3,
+  "body": "Did management reduce rent during the heating issue?",
+  "created": "2026-05-03"
+},
+{
+  "_id": 204,
+  "review_id": 104,
+  "user_id": 4,
+  "body": "I also had elevator issues when visiting someone there.",
+  "created": "2026-05-06"
+},
+{
+  "_id": 205,
+  "review_id": 105,
+  "user_id": 2,
+  "body": "Was noise ever a problem?",
+  "created": "2026-05-08"
+}]
