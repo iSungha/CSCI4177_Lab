@@ -6,42 +6,51 @@ const swaggerSpec = swaggerJSDoc({
     info: {
       title: "TenantTrails API",
       version: "1.0.0",
-      description: "CSCI 4177 Lab 5 REST API for TenantTrails",
+      description: "CSCI 4177 Lab 6 REST API for TenantTrails",
     },
     servers: [
       {
         url: "http://localhost:3000",
-        description: "Local development server",
+        description: "Local API server",
       },
     ],
     tags: [
       {
         name: "Health",
-        description: "API health and database test endpoints",
+        description: "Health and database check endpoints",
       },
       {
         name: "Auth",
-        description: "Signup, login, and current user endpoints",
+        description: "Signup, login, logout, and current user endpoints",
       },
       {
         name: "Apartments",
-        description: "Apartment listing and detail endpoints",
+        description: "Apartment dashboard and detail endpoints",
       },
       {
         name: "Reviews",
-        description: "Review endpoints",
+        description: "Create, edit, and delete review endpoints",
       },
       {
         name: "Comments",
         description: "Comment endpoints",
       },
       {
+        name: "Profile",
+        description: "Logged-in user's profile and reviews",
+      },
+      {
         name: "Upload",
-        description: "Image upload endpoint using Cloudinary",
+        description: "Cloudinary image upload endpoint",
       },
     ],
     components: {
       securitySchemes: {
+        cookieAuth: {
+          type: "apiKey",
+          in: "cookie",
+          name: "token",
+        },
         bearerAuth: {
           type: "http",
           scheme: "bearer",

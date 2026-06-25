@@ -8,7 +8,7 @@ const router = express.Router();
  * @swagger
  * /api/apartments:
  *   get:
- *     summary: Get all apartments with rating and review count
+ *     summary: Get all apartments with average rating and review count
  *     tags: [Apartments]
  *     responses:
  *       200:
@@ -35,7 +35,9 @@ router.get("/", async (req, res) => {
 
     res.json(apartments);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      error: error.message,
+    });
   }
 });
 
@@ -51,7 +53,7 @@ router.get("/", async (req, res) => {
  *         required: true
  *         schema:
  *           type: integer
- *         example: 3
+ *         example: 1
  *     responses:
  *       200:
  *         description: Apartment detail returned
@@ -71,7 +73,7 @@ router.get("/:id", async (req, res) => {
         a.units,
         a.built,
         COALESCE(ROUND(AVG(r.rating), 1), 0) AS rating,
-        COUNT(r.id) AS review_count
+        COUNT(r.id) AS reviewCount
       FROM apartments a
       LEFT JOIN reviews r ON r.apt_id = a.id
       WHERE a.id = ?
@@ -81,23 +83,27 @@ router.get("/:id", async (req, res) => {
     );
 
     if (!apartment) {
-      return res.status(404).json({ error: "Apartment not found" });
+      return res.status(404).json({
+        error: "Apartment not found",
+      });
     }
 
     const [reviews] = await pool.query(
       `
       SELECT
         r.id,
+        r.apt_id AS aptId,
+        r.user_id AS userId,
         r.rating,
         r.body,
-        r.created,
+        r.created AS date,
         r.image_url AS imageUrl,
-        u.id AS userId,
-        u.name AS author
+        u.name AS author,
+        u.initials AS authorInitials
       FROM reviews r
       JOIN users u ON r.user_id = u.id
       WHERE r.apt_id = ?
-      ORDER BY r.created DESC
+      ORDER BY r.created DESC, r.id DESC
       `,
       [req.params.id]
     );
@@ -107,15 +113,16 @@ router.get("/:id", async (req, res) => {
       SELECT
         c.id,
         c.review_id AS reviewId,
+        c.user_id AS userId,
         c.body,
-        c.created,
-        u.id AS userId,
-        u.name AS author
+        c.created AS date,
+        u.name AS author,
+        u.initials AS authorInitials
       FROM comments c
       JOIN users u ON c.user_id = u.id
       JOIN reviews r ON c.review_id = r.id
       WHERE r.apt_id = ?
-      ORDER BY c.created ASC
+      ORDER BY c.created ASC, c.id ASC
       `,
       [req.params.id]
     );
@@ -130,7 +137,69 @@ router.get("/:id", async (req, res) => {
       reviews: reviewsWithComments,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/apartments/{id}/reviews:
+ *   get:
+ *     summary: Get reviews for one apartment
+ *     tags: [Reviews]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         example: 1
+ *     responses:
+ *       200:
+ *         description: Reviews returned
+ *       404:
+ *         description: Apartment not found
+ */
+router.get("/:id/reviews", async (req, res) => {
+  try {
+    const [[apartment]] = await pool.query(
+      "SELECT id FROM apartments WHERE id = ?",
+      [req.params.id]
+    );
+
+    if (!apartment) {
+      return res.status(404).json({
+        error: "Apartment not found",
+      });
+    }
+
+    const [reviews] = await pool.query(
+      `
+      SELECT
+        r.id,
+        r.apt_id AS aptId,
+        r.user_id AS userId,
+        r.rating,
+        r.body,
+        r.created AS date,
+        r.image_url AS imageUrl,
+        u.name AS author,
+        u.initials AS authorInitials
+      FROM reviews r
+      JOIN users u ON r.user_id = u.id
+      WHERE r.apt_id = ?
+      ORDER BY r.created DESC, r.id DESC
+      `,
+      [req.params.id]
+    );
+
+    res.json(reviews);
+  } catch (error) {
+    res.status(500).json({
+      error: error.message,
+    });
   }
 });
 
@@ -141,6 +210,7 @@ router.get("/:id", async (req, res) => {
  *     summary: Add a review to an apartment
  *     tags: [Reviews]
  *     security:
+ *       - cookieAuth: []
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
@@ -148,7 +218,7 @@ router.get("/:id", async (req, res) => {
  *         required: true
  *         schema:
  *           type: integer
- *         example: 3
+ *         example: 1
  *     requestBody:
  *       required: true
  *       content:
@@ -162,28 +232,34 @@ router.get("/:id", async (req, res) => {
  *                 example: 5
  *               body:
  *                 type: string
- *                 example: API test review from Swagger.
+ *                 example: This review includes a Cloudinary image.
  *               imageUrl:
  *                 type: string
- *                 example: https://example.com/image.jpg
+ *                 example: https://res.cloudinary.com/demo/image/upload/example.jpg
  *     responses:
  *       201:
  *         description: Review created
  *       401:
- *         description: No token
+ *         description: Not logged in
+ *       404:
+ *         description: Apartment not found
  */
 router.post("/:id/reviews", auth, async (req, res) => {
   try {
     const { rating, body, imageUrl } = req.body;
 
-    if (!rating || rating < 1 || rating > 5) {
+    const numericRating = Number(rating);
+
+    if (!numericRating || numericRating < 1 || numericRating > 5) {
       return res.status(400).json({
         error: "Rating must be between 1 and 5",
       });
     }
 
     if (!body || !body.trim()) {
-      return res.status(400).json({ error: "Review body is required" });
+      return res.status(400).json({
+        error: "Review body is required",
+      });
     }
 
     const [[apartment]] = await pool.query(
@@ -192,7 +268,9 @@ router.post("/:id/reviews", auth, async (req, res) => {
     );
 
     if (!apartment) {
-      return res.status(404).json({ error: "Apartment not found" });
+      return res.status(404).json({
+        error: "Apartment not found",
+      });
     }
 
     const [result] = await pool.query(
@@ -200,19 +278,39 @@ router.post("/:id/reviews", auth, async (req, res) => {
       INSERT INTO reviews (apt_id, user_id, rating, body, created, image_url)
       VALUES (?, ?, ?, ?, CURDATE(), ?)
       `,
-      [req.params.id, req.user.id, rating, body.trim(), imageUrl || null]
+      [
+        req.params.id,
+        req.user.id,
+        numericRating,
+        body.trim(),
+        imageUrl || null,
+      ]
     );
 
-    res.status(201).json({
-      id: result.insertId,
-      apartmentId: Number(req.params.id),
-      userId: req.user.id,
-      rating,
-      body: body.trim(),
-      imageUrl: imageUrl || null,
-    });
+    const [[createdReview]] = await pool.query(
+      `
+      SELECT
+        r.id,
+        r.apt_id AS aptId,
+        r.user_id AS userId,
+        r.rating,
+        r.body,
+        r.created AS date,
+        r.image_url AS imageUrl,
+        u.name AS author,
+        u.initials AS authorInitials
+      FROM reviews r
+      JOIN users u ON r.user_id = u.id
+      WHERE r.id = ?
+      `,
+      [result.insertId]
+    );
+
+    res.status(201).json(createdReview);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      error: error.message,
+    });
   }
 });
 
@@ -223,6 +321,7 @@ router.post("/:id/reviews", auth, async (req, res) => {
  *     summary: Add a comment to a review
  *     tags: [Comments]
  *     security:
+ *       - cookieAuth: []
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
@@ -230,7 +329,7 @@ router.post("/:id/reviews", auth, async (req, res) => {
  *         required: true
  *         schema:
  *           type: integer
- *         example: 3
+ *         example: 1
  *       - in: path
  *         name: reviewId
  *         required: true
@@ -247,19 +346,23 @@ router.post("/:id/reviews", auth, async (req, res) => {
  *             properties:
  *               body:
  *                 type: string
- *                 example: API test comment from Swagger.
+ *                 example: I agree with this review.
  *     responses:
  *       201:
  *         description: Comment created
  *       401:
- *         description: No token
+ *         description: Not logged in
+ *       404:
+ *         description: Review not found for this apartment
  */
 router.post("/:apartmentId/reviews/:reviewId/comments", auth, async (req, res) => {
   try {
     const { body } = req.body;
 
     if (!body || !body.trim()) {
-      return res.status(400).json({ error: "Comment body is required" });
+      return res.status(400).json({
+        error: "Comment body is required",
+      });
     }
 
     const [[review]] = await pool.query(
@@ -281,14 +384,28 @@ router.post("/:apartmentId/reviews/:reviewId/comments", auth, async (req, res) =
       [req.params.reviewId, req.user.id, body.trim()]
     );
 
-    res.status(201).json({
-      id: result.insertId,
-      reviewId: Number(req.params.reviewId),
-      userId: req.user.id,
-      body: body.trim(),
-    });
+    const [[createdComment]] = await pool.query(
+      `
+      SELECT
+        c.id,
+        c.review_id AS reviewId,
+        c.user_id AS userId,
+        c.body,
+        c.created AS date,
+        u.name AS author,
+        u.initials AS authorInitials
+      FROM comments c
+      JOIN users u ON c.user_id = u.id
+      WHERE c.id = ?
+      `,
+      [result.insertId]
+    );
+
+    res.status(201).json(createdComment);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      error: error.message,
+    });
   }
 });
 

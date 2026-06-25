@@ -1,0 +1,25 @@
+PS C:\Users\007ga\Downloads\Lab 2\CSCI4177_Lab> git log
+commit 2800d389f62438b6563f6d4d1813b81181f22083 (HEAD -> main, origin/main)
+Author: iSungha <007.garry.earl@gmail.com>
+Date:   Fri Jun 19 11:54:22 2026 -0300
+
+    backend api
+
+commit 927349478d0413f480cd4a0af0756e2718ca0a3c
+Author: iSungha <007.garry.earl@gmail.com>
+Date:   Fri Jun 5 10:40:10 2026 -0300
+
+    readMe update
+
+commit 5a73acbe8fd7fcc540d1196e13ffbadd92067dd9
+Author: iSungha <007.garry.earl@gmail.com>
+Date:   Fri Jun 5 10:21:13 2026 -0300
+
+    Add Apartment detial/id and review and profile implementaiton.
+
+commit 7b1462e6c0c26f858c8b3be1f8af5af6c93949e3
+Author: Gurkeerat Sangha <gr332537@dal.ca>
+Date:   Fri May 29 15:21:28 2026 -0300
+
+    Lab2
+PS C:\Users\007ga\Downloads\Lab 2\CSCI4177_Lab>

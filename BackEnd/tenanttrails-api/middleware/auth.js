@@ -1,12 +1,19 @@
 import jwt from "jsonwebtoken";
 
 export function auth(req, res, next) {
+  const cookieToken = req.cookies?.token;
+
+  // Fallback for Postman/Swagger manual testing.
+  // Lab 6 frontend should use the httpOnly cookie.
   const header = req.headers.authorization;
-  const token = header && header.split(" ")[1];
+  const bearerToken =
+    header && header.startsWith("Bearer ") ? header.split(" ")[1] : null;
+
+  const token = cookieToken || bearerToken;
 
   if (!token) {
     return res.status(401).json({
-      error: "No token provided",
+      error: "Not logged in",
     });
   }
 
@@ -15,7 +22,7 @@ export function auth(req, res, next) {
     next();
   } catch {
     return res.status(401).json({
-      error: "Invalid token",
+      error: "Invalid or expired token",
     });
   }
 }

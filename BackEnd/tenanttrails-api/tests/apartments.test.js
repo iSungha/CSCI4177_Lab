@@ -13,7 +13,10 @@ describe("apartments API", () => {
   it("blocks an unauthenticated review", async () => {
     const res = await request(app)
       .post("/api/apartments/1/reviews")
-      .send({ rating: 5, body: "Nice place" });
+      .send({
+        rating: 5,
+        body: "Nice place",
+      });
 
     expect(res.status).toBe(401);
   });

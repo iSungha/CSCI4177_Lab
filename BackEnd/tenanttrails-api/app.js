@@ -1,17 +1,30 @@
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import "dotenv/config";
 import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./swagger.js";
 import { pool } from "./db.js";
+
 import authRoutes from "./routes/authRoutes.js";
 import apartmentRoutes from "./routes/apartmentRoutes.js";
+import profileRoutes from "./routes/profileRoutes.js";
+import reviewRoutes from "./routes/reviewRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 
 const app = express();
 
-app.use(cors());
+const clientOrigin = process.env.CLIENT_ORIGIN || "http://localhost:5173";
+
+app.use(
+  cors({
+    origin: clientOrigin,
+    credentials: true,
+  })
+);
+
 app.use(express.json());
+app.use(cookieParser());
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
@@ -65,10 +78,14 @@ app.get("/api/db-test", async (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/apartments", apartmentRoutes);
+app.use("/api/profile", profileRoutes);
+app.use("/api/reviews", reviewRoutes);
 app.use("/api/upload", uploadRoutes);
 
 app.use((req, res) => {
-  res.status(404).json({ error: "Route not found" });
+  res.status(404).json({
+    error: "Route not found",
+  });
 });
 
 export default app;

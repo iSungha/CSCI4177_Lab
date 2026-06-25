@@ -14,8 +14,10 @@ const upload = multer({
  * /api/upload:
  *   post:
  *     summary: Upload a review image to Cloudinary
+ *     description: Uploads an image file to Cloudinary and returns the secure URL. Store this URL on a review as imageUrl.
  *     tags: [Upload]
  *     security:
+ *       - cookieAuth: []
  *       - bearerAuth: []
  *     requestBody:
  *       required: true
@@ -23,21 +25,18 @@ const upload = multer({
  *         multipart/form-data:
  *           schema:
  *             type: object
- *             required:
- *               - image
+ *             required: [image]
  *             properties:
  *               image:
  *                 type: string
  *                 format: binary
  *     responses:
  *       200:
- *         description: Image uploaded successfully and Cloudinary URL returned
+ *         description: Image uploaded and Cloudinary URL returned
  *       400:
  *         description: No image file uploaded
  *       401:
- *         description: Missing or invalid token
- *       500:
- *         description: Server error or missing Cloudinary credentials
+ *         description: Not logged in
  */
 router.post("/", auth, upload.single("image"), async (req, res) => {
   try {
@@ -60,7 +59,8 @@ router.post("/", auth, upload.single("image"), async (req, res) => {
     const result = await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         {
-          folder: "tenanttrails",
+          folder: "tenanttrails/reviews",
+          resource_type: "image",
         },
         (error, uploadedFile) => {
           if (error) {
@@ -76,6 +76,7 @@ router.post("/", auth, upload.single("image"), async (req, res) => {
 
     res.json({
       url: result.secure_url,
+      publicId: result.public_id,
     });
   } catch (error) {
     res.status(500).json({

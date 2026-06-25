@@ -7,7 +7,18 @@ import { auth } from "../middleware/auth.js";
 const router = express.Router();
 
 function signToken(id) {
-  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: "7d",
+  });
+}
+
+function cookieOptions() {
+  return {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: false,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  };
 }
 
 /**
@@ -22,10 +33,7 @@ function signToken(id) {
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - name
- *               - email
- *               - password
+ *             required: [name, email, password]
  *             properties:
  *               name:
  *                 type: string
@@ -38,11 +46,9 @@ function signToken(id) {
  *                 example: password123
  *     responses:
  *       201:
- *         description: User created successfully and JWT returned
+ *         description: User created and auth cookie set
  *       400:
- *         description: Invalid input or email already registered
- *       500:
- *         description: Server error
+ *         description: Invalid input
  */
 router.post("/signup", async (req, res) => {
   try {
@@ -66,9 +72,11 @@ router.post("/signup", async (req, res) => {
       });
     }
 
+    const normalizedEmail = email.toLowerCase();
+
     const [[existingUser]] = await pool.query(
       "SELECT id FROM users WHERE email = ?",
-      [email.toLowerCase()]
+      [normalizedEmail]
     );
 
     if (existingUser) {
@@ -81,25 +89,30 @@ router.post("/signup", async (req, res) => {
 
     const initials = name
       .split(" ")
+      .filter(Boolean)
       .map((part) => part.charAt(0).toUpperCase())
       .join("")
       .slice(0, 2);
 
     const [result] = await pool.query(
       "INSERT INTO users (name, email, password, initials) VALUES (?, ?, ?, ?)",
-      [name, email.toLowerCase(), hash, initials]
+      [name, normalizedEmail, hash, initials]
     );
 
-    const token = signToken(result.insertId);
+    const user = {
+      id: result.insertId,
+      name,
+      email: normalizedEmail,
+      initials,
+    };
+
+    const token = signToken(user.id);
+
+    res.cookie("token", token, cookieOptions());
 
     res.status(201).json({
+      user,
       token,
-      user: {
-        id: result.insertId,
-        name,
-        email: email.toLowerCase(),
-        initials,
-      },
     });
   } catch (error) {
     res.status(500).json({
@@ -112,7 +125,7 @@ router.post("/signup", async (req, res) => {
  * @swagger
  * /api/auth/login:
  *   post:
- *     summary: Login and receive a JWT
+ *     summary: Login and set an httpOnly auth cookie
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -120,9 +133,7 @@ router.post("/signup", async (req, res) => {
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - email
- *               - password
+ *             required: [email, password]
  *             properties:
  *               email:
  *                 type: string
@@ -132,13 +143,9 @@ router.post("/signup", async (req, res) => {
  *                 example: password123
  *     responses:
  *       200:
- *         description: Login successful and JWT returned
- *       400:
- *         description: Missing email or password
+ *         description: Login successful and cookie set
  *       401:
  *         description: Invalid credentials
- *       500:
- *         description: Server error
  */
 router.post("/login", async (req, res) => {
   try {
@@ -150,12 +157,14 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    const [[user]] = await pool.query(
+    const normalizedEmail = email.toLowerCase();
+
+    const [[userRow]] = await pool.query(
       "SELECT * FROM users WHERE email = ?",
-      [email.toLowerCase()]
+      [normalizedEmail]
     );
 
-    if (!user) {
+    if (!userRow) {
       return res.status(401).json({
         error: "Invalid credentials",
       });
@@ -163,16 +172,17 @@ router.post("/login", async (req, res) => {
 
     let passwordMatches = false;
 
-    if (user.password.startsWith("$2")) {
-      passwordMatches = await bcrypt.compare(password, user.password);
+    if (userRow.password.startsWith("$2")) {
+      passwordMatches = await bcrypt.compare(password, userRow.password);
     } else {
-      passwordMatches = password === user.password;
+      // Helps if old Lab 4 seed users still have plain text passwords.
+      passwordMatches = password === userRow.password;
 
       if (passwordMatches) {
         const hash = await bcrypt.hash(password, 10);
         await pool.query("UPDATE users SET password = ? WHERE id = ?", [
           hash,
-          user.id,
+          userRow.id,
         ]);
       }
     }
@@ -183,16 +193,20 @@ router.post("/login", async (req, res) => {
       });
     }
 
+    const user = {
+      id: userRow.id,
+      name: userRow.name,
+      email: userRow.email,
+      initials: userRow.initials,
+    };
+
     const token = signToken(user.id);
 
+    res.cookie("token", token, cookieOptions());
+
     res.json({
+      user,
       token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        initials: user.initials,
-      },
     });
   } catch (error) {
     res.status(500).json({
@@ -208,16 +222,13 @@ router.post("/login", async (req, res) => {
  *     summary: Get the currently logged-in user
  *     tags: [Auth]
  *     security:
+ *       - cookieAuth: []
  *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Current user returned
  *       401:
- *         description: Missing or invalid token
- *       404:
- *         description: User not found
- *       500:
- *         description: Server error
+ *         description: Not logged in
  */
 router.get("/me", auth, async (req, res) => {
   try {
@@ -232,12 +243,37 @@ router.get("/me", auth, async (req, res) => {
       });
     }
 
-    res.json(user);
+    res.json({
+      user,
+    });
   } catch (error) {
     res.status(500).json({
       error: error.message,
     });
   }
+});
+
+/**
+ * @swagger
+ * /api/auth/logout:
+ *   post:
+ *     summary: Logout and clear the auth cookie
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: Logged out
+ */
+router.post("/logout", (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: false,
+  });
+
+  res.json({
+    ok: true,
+    message: "Logged out",
+  });
 });
 
 export default router;
