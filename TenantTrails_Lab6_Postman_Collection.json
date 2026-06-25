@@ -1,0 +1,876 @@
+{
+  "info": {
+    "_postman_id": "a4240a2c-tenanttrails-swagger-only",
+    "name": "TenantTrails Lab 6 API - Swagger Endpoints Only",
+    "description": "Clean Postman collection for CSCI 4177 Lab 6 TenantTrails API. This version includes one request for each Swagger endpoint only. Saved example responses are included for documentation. Login/signup set the token cookie, and protected requests use the stored cookie automatically.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01 Health",
+      "item": [
+        {
+          "name": "GET /api/health",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "health"
+              ]
+            },
+            "description": "Health check endpoint."
+          },
+          "response": [
+            {
+              "name": "200 OK - Health",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": ""
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"ok\",\n  \"message\": \"TenantTrails API is running\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /api/db-test",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/db-test",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "db-test"
+              ]
+            },
+            "description": "Database connection test endpoint."
+          },
+          "response": [
+            {
+              "name": "200 OK - DB Test",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": ""
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Database connected\",\n  \"result\": [\n    {\n      \"test\": 1\n    }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 Auth",
+      "item": [
+        {
+          "name": "POST /api/auth/signup",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/signup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "signup"
+              ]
+            },
+            "description": "Create a new account. Postman stores the token cookie from the response.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{name}}\",\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "201 Created - Signup",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": ""
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Set-Cookie",
+                  "value": "token=example.jwt.token; HttpOnly; SameSite=Lax"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"user\": {\n    \"id\": 8,\n    \"name\": \"Postman Test User\",\n    \"email\": \"postman-test@dal.ca\",\n    \"initials\": \"P\"\n  },\n  \"token\": \"example.jwt.token\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /api/auth/login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Log in. Postman stores the token cookie from the response.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK - Login",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": ""
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Set-Cookie",
+                  "value": "token=example.jwt.token; HttpOnly; SameSite=Lax"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"user\": {\n    \"id\": 8,\n    \"name\": \"Postman Test User\",\n    \"email\": \"postman-test@dal.ca\",\n    \"initials\": \"P\"\n  },\n  \"token\": \"example.jwt.token\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /api/auth/me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Return the currently logged-in user from the cookie."
+          },
+          "response": [
+            {
+              "name": "200 OK - Current User",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": ""
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"user\": {\n    \"id\": 8,\n    \"name\": \"Postman Test User\",\n    \"email\": \"postman-test@dal.ca\",\n    \"initials\": \"P\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /api/auth/logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Clear the auth cookie."
+          },
+          "response": [
+            {
+              "name": "200 OK - Logout",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": ""
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"ok\": true,\n  \"message\": \"Logged out\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 Apartments",
+      "item": [
+        {
+          "name": "GET /api/apartments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/apartments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "apartments"
+              ]
+            },
+            "description": "Get all apartments for the dashboard."
+          },
+          "response": [
+            {
+              "name": "200 OK - Apartment List",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": ""
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n  {\n    \"id\": 1,\n    \"name\": \"The Marlstone\",\n    \"address\": \"5540 Spring Garden Rd\",\n    \"neighbourhood\": \"Spring Garden\",\n    \"landlord\": \"Marlstone Residential\",\n    \"units\": 104,\n    \"built\": 1998,\n    \"yearBuilt\": 1998,\n    \"imageUrl\": \"https://res.cloudinary.com/dxvfxbine/image/upload/v1782408338/tenanttrails/reviews/lbu8bmhcyyezsfthoabz.jpg\",\n    \"img\": \"https://res.cloudinary.com/dxvfxbine/image/upload/v1782408338/tenanttrails/reviews/lbu8bmhcyyezsfthoabz.jpg\",\n    \"rating\": \"5.0\",\n    \"reviews\": 3\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "GET /api/apartments/{id}",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/apartments/{{apartmentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "apartments",
+                "{{apartmentId}}"
+              ]
+            },
+            "description": "Get one apartment by ID."
+          },
+          "response": [
+            {
+              "name": "200 OK - Apartment Detail",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": ""
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": 1,\n  \"name\": \"The Marlstone\",\n  \"address\": \"5540 Spring Garden Rd\",\n  \"neighbourhood\": \"Spring Garden\",\n  \"landlord\": \"Marlstone Residential\",\n  \"units\": 104,\n  \"built\": 1998,\n  \"yearBuilt\": 1998,\n  \"imageUrl\": \"https://res.cloudinary.com/dxvfxbine/image/upload/v1782408338/tenanttrails/reviews/lbu8bmhcyyezsfthoabz.jpg\",\n  \"img\": \"https://res.cloudinary.com/dxvfxbine/image/upload/v1782408338/tenanttrails/reviews/lbu8bmhcyyezsfthoabz.jpg\",\n  \"rating\": \"5.0\",\n  \"reviews\": 3,\n  \"reviewsList\": []\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /api/apartments/{id}/reviews",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/apartments/{{apartmentId}}/reviews",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "apartments",
+                "{{apartmentId}}",
+                "reviews"
+              ]
+            },
+            "description": "Get all reviews for one apartment."
+          },
+          "response": [
+            {
+              "name": "200 OK - Apartment Reviews",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": ""
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n  {\n    \"id\": 21,\n    \"aptId\": 1,\n    \"userId\": 8,\n    \"rating\": 5,\n    \"body\": \"Example review loaded from the database.\",\n    \"date\": \"2026-06-25\",\n    \"imageUrl\": \"https://res.cloudinary.com/dxvfxbine/image/upload/example.jpg\",\n    \"img\": \"https://res.cloudinary.com/dxvfxbine/image/upload/example.jpg\",\n    \"author\": \"Postman Test User\",\n    \"authorInitials\": \"P\"\n  }\n]"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04 Upload",
+      "item": [
+        {
+          "name": "POST /api/upload",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Upload returns URL', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const json = pm.response.json();",
+                  "  if (json.url) pm.collectionVariables.set('uploadUrl', json.url);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/upload",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "upload"
+              ]
+            },
+            "description": "Upload an image to Cloudinary. Choose a file in Body > form-data.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": [],
+                  "description": "Choose an image file before sending."
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK - Upload",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": ""
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"url\": \"https://res.cloudinary.com/dxvfxbine/image/upload/v1782408338/tenanttrails/reviews/lbu8bmhcyyezsfthoabz.jpg\",\n  \"publicId\": \"tenanttrails/reviews/lbu8bmhcyyezsfthoabz\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05 Reviews",
+      "item": [
+        {
+          "name": "POST /api/apartments/{id}/reviews",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Review created', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "  const json = pm.response.json();",
+                  "  if (json.id) pm.collectionVariables.set('reviewId', String(json.id));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/apartments/{{apartmentId}}/reviews",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "apartments",
+                "{{apartmentId}}",
+                "reviews"
+              ]
+            },
+            "description": "Create a review for one apartment. Requires login cookie.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"body\": \"Postman example review with optional image.\",\n  \"imageUrl\": \"{{uploadUrl}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "201 Created - Review",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": ""
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": 21,\n  \"aptId\": 1,\n  \"userId\": 8,\n  \"rating\": 5,\n  \"body\": \"Postman example review with optional image.\",\n  \"date\": \"2026-06-25\",\n  \"imageUrl\": \"https://res.cloudinary.com/dxvfxbine/image/upload/example.jpg\",\n  \"img\": \"https://res.cloudinary.com/dxvfxbine/image/upload/example.jpg\",\n  \"author\": \"Postman Test User\",\n  \"authorInitials\": \"P\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "PUT /api/reviews/{id}",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/reviews/{{reviewId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reviews",
+                "{{reviewId}}"
+              ]
+            },
+            "description": "Edit a review. Requires login cookie and review ownership.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 4,\n  \"body\": \"Updated Postman example review.\",\n  \"imageUrl\": \"{{uploadUrl}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK - Review Updated",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": ""
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": 21,\n  \"aptId\": 1,\n  \"userId\": 8,\n  \"rating\": 4,\n  \"body\": \"Updated Postman example review.\",\n  \"date\": \"2026-06-25\",\n  \"imageUrl\": \"https://res.cloudinary.com/dxvfxbine/image/upload/example.jpg\",\n  \"author\": \"Postman Test User\",\n  \"authorInitials\": \"P\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /api/reviews/{id}",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/reviews/{{reviewId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reviews",
+                "{{reviewId}}"
+              ]
+            },
+            "description": "Delete a review. Requires login cookie and review ownership."
+          },
+          "response": [
+            {
+              "name": "200 OK - Review Deleted",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": ""
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"ok\": true,\n  \"deletedReviewId\": 21\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "06 Comments",
+      "item": [
+        {
+          "name": "POST /api/apartments/{apartmentId}/reviews/{reviewId}/comments",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/apartments/{{apartmentId}}/reviews/{{reviewId}}/comments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "apartments",
+                "{{apartmentId}}",
+                "reviews",
+                "{{reviewId}}",
+                "comments"
+              ]
+            },
+            "description": "Create a comment on a review. Requires login cookie.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"Postman example comment.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "name": "201 Created - Comment",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": ""
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": 12,\n  \"reviewId\": 21,\n  \"userId\": 8,\n  \"body\": \"Postman example comment.\",\n  \"date\": \"2026-06-25\",\n  \"author\": \"Postman Test User\",\n  \"authorInitials\": \"P\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "07 Profile",
+      "item": [
+        {
+          "name": "GET /api/profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "profile"
+              ]
+            },
+            "description": "Get logged-in user's profile and reviews. Requires login cookie."
+          },
+          "response": [
+            {
+              "name": "200 OK - Profile",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": ""
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"user\": {\n    \"id\": 8,\n    \"name\": \"Postman Test User\",\n    \"email\": \"postman-test@dal.ca\",\n    \"initials\": \"P\"\n  },\n  \"reviews\": [\n    {\n      \"id\": 21,\n      \"aptId\": 1,\n      \"userId\": 8,\n      \"rating\": 4,\n      \"body\": \"Updated Postman example review.\",\n      \"date\": \"2026-06-25\",\n      \"imageUrl\": \"https://res.cloudinary.com/dxvfxbine/image/upload/example.jpg\",\n      \"apartmentName\": \"The Marlstone\",\n      \"apartmentAddress\": \"5540 Spring Garden Rd\",\n      \"apartmentNeighbourhood\": \"Spring Garden\"\n    }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "name",
+      "value": "Postman Test User",
+      "type": "string"
+    },
+    {
+      "key": "email",
+      "value": "postman-test@dal.ca",
+      "type": "string"
+    },
+    {
+      "key": "password",
+      "value": "Password1!",
+      "type": "string"
+    },
+    {
+      "key": "apartmentId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "reviewId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "uploadUrl",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
