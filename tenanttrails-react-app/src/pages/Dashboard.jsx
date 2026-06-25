@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { apiFetch } from "../api/client";
 import ApartmentCard from "../components/ApartmentCard";
-import { apartments } from "../data/mockData";
 import { useAuth } from "../context/AuthContext";
 
 function Dashboard() {
@@ -9,16 +9,50 @@ function Dashboard() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [apartments, setApartments] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [neighbourhood, setNeighbourhood] = useState("All Neighbourhoods");
   const [sortBy, setSortBy] = useState("Highest Rated");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadApartments() {
+      try {
+        setLoading(true);
+        setError("");
+
+        const data = await apiFetch("/api/apartments");
+
+        if (!ignore) {
+          setApartments(data);
+        }
+      } catch (loadError) {
+        if (!ignore) {
+          setError(loadError.message || "Could not load apartments.");
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadApartments();
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const neighbourhoods = useMemo(() => {
     return [
       "All Neighbourhoods",
       ...new Set(apartments.map((apartment) => apartment.neighbourhood)),
     ];
-  }, []);
+  }, [apartments]);
 
   const filteredApartments = useMemo(() => {
     const normalizedSearch = searchText.trim().toLowerCase();
@@ -37,17 +71,31 @@ function Dashboard() {
     });
 
     result = [...result].sort((a, b) => {
-      if (sortBy === "Highest Rated") return b.rating - a.rating;
-      if (sortBy === "Most Reviews") return b.reviews - a.reviews;
-      if (sortBy === "Name A-Z") return a.name.localeCompare(b.name);
+      if (sortBy === "Highest Rated") {
+        return Number(b.rating || 0) - Number(a.rating || 0);
+      }
+
+      if (sortBy === "Most Reviews") {
+        return Number(b.reviews || 0) - Number(a.reviews || 0);
+      }
+
+      if (sortBy === "Name A-Z") {
+        return a.name.localeCompare(b.name);
+      }
+
       return 0;
     });
 
     return result;
-  }, [searchText, neighbourhood, sortBy]);
+  }, [apartments, searchText, neighbourhood, sortBy]);
 
-  function handleLogout() {
-    logout();
+  const totalReviews = apartments.reduce(
+    (total, apartment) => total + Number(apartment.reviews || 0),
+    0
+  );
+
+  async function handleLogout() {
+    await logout();
     navigate("/login");
   }
 
@@ -70,7 +118,7 @@ function Dashboard() {
 
         <div className="dashboard-user">
           <Link to="/profile" className="avatar-link">
-            <div className="avatar">{user?.name?.charAt(0) || "U"}</div>
+            <div className="avatar">{user?.initials || user?.name?.charAt(0) || "U"}</div>
             <span>{user?.name}</span>
           </Link>
           <button type="button" onClick={handleLogout}>
@@ -91,11 +139,8 @@ function Dashboard() {
 
         <div className="stats-row">
           <span>{apartments.length} apartments</span>
-          <span>
-            {apartments.reduce((total, apartment) => total + apartment.reviews, 0)}{" "}
-            reviews
-          </span>
-          <span>{neighbourhoods.length - 1} neighbourhoods</span>
+          <span>{totalReviews} reviews</span>
+          <span>{Math.max(neighbourhoods.length - 1, 0)} neighbourhoods</span>
         </div>
 
         <div className="filters-row">
@@ -118,13 +163,19 @@ function Dashboard() {
           </select>
         </div>
 
-        <div className="apartment-grid">
-          {filteredApartments.map((apartment) => (
-            <ApartmentCard apartment={apartment} key={apartment.id} />
-          ))}
-        </div>
+        {loading && <p className="loading-state">Loading apartments...</p>}
 
-        {filteredApartments.length === 0 && (
+        {error && <p className="api-error">{error}</p>}
+
+        {!loading && !error && (
+          <div className="apartment-grid">
+            {filteredApartments.map((apartment) => (
+              <ApartmentCard apartment={apartment} key={apartment.id} />
+            ))}
+          </div>
+        )}
+
+        {!loading && !error && filteredApartments.length === 0 && (
           <p className="empty-state">No apartments matched your search.</p>
         )}
       </section>

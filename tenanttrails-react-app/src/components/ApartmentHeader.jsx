@@ -1,6 +1,9 @@
 import StarRating from "./StarRating";
 
 function ApartmentHeader({ apartment }) {
+  const rating = Number(apartment.rating || 0);
+  const reviewCount = apartment.reviews || apartment.reviewCount || 0;
+
   return (
     <section className="apartment-detail-header">
       <div>
@@ -9,14 +12,14 @@ function ApartmentHeader({ apartment }) {
           📍 {apartment.address} · {apartment.neighbourhood}
         </p>
         <p className="detail-description">
-          High-rise tower in a quiet residential neighbourhood.
+          Reviews and property details are loaded from the TenantTrails API.
         </p>
       </div>
 
       <div className="detail-rating">
-        <strong>{apartment.rating.toFixed(1)}</strong>
-        <StarRating rating={apartment.rating} />
-        <span>{apartment.reviews} reviews</span>
+        <strong>{rating.toFixed(1)}</strong>
+        <StarRating rating={rating} />
+        <span>{reviewCount} reviews</span>
       </div>
     </section>
   );

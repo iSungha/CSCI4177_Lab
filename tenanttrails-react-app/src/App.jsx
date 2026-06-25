@@ -1,6 +1,5 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
-import { ReviewsProvider } from "./context/ReviewsContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
@@ -13,44 +12,42 @@ import "./App.css";
 function App() {
   return (
     <AuthProvider>
-      <ReviewsProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
 
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
 
-            <Route
-              path="/apartment/:id"
-              element={
-                <ProtectedRoute>
-                  <ApartmentDetail />
-                </ProtectedRoute>
-              }
-            />
+          <Route
+            path="/apartment/:id"
+            element={
+              <ProtectedRoute>
+                <ApartmentDetail />
+              </ProtectedRoute>
+            }
+          />
 
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              }
-            />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
 
-            <Route path="*" element={<Landing />} />
-          </Routes>
-        </BrowserRouter>
-      </ReviewsProvider>
+          <Route path="*" element={<Landing />} />
+        </Routes>
+      </BrowserRouter>
     </AuthProvider>
   );
 }

@@ -7,11 +7,12 @@ function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const [email, setEmail] = useState("garrysangha@dal.ca");
-  const [password, setPassword] = useState("password123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
 
     const validationErrors = validateLogin(email, password);
@@ -21,7 +22,12 @@ function Login() {
       return;
     }
 
-    const result = login(email, password);
+    setSubmitting(true);
+    setErrors({});
+
+    const result = await login(email, password);
+
+    setSubmitting(false);
 
     if (!result.success) {
       setErrors({ form: result.message });
@@ -53,7 +59,7 @@ function Login() {
               id="email"
               type="email"
               value={email}
-              placeholder="alex@dal.ca"
+              placeholder="you@dal.ca"
               onChange={(event) => setEmail(event.target.value)}
             />
             {errors.email && <span className="error">{errors.email}</span>}
@@ -73,16 +79,14 @@ function Login() {
             )}
           </div>
 
-          <button type="submit" className="auth-submit">
-            Sign In
+          <button type="submit" className="auth-submit" disabled={submitting}>
+            {submitting ? "Signing in..." : "Sign In"}
           </button>
         </form>
 
         <p className="switch-auth">
           Don&apos;t have an account? <Link to="/signup">Create one</Link>
         </p>
-
-        <div className="demo-box">Demo: garrysangha@dal.ca / password123</div>
       </section>
     </main>
   );

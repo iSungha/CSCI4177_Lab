@@ -8,7 +8,7 @@ const router = express.Router();
  * @swagger
  * /api/apartments:
  *   get:
- *     summary: Get all apartments with average rating and review count
+ *     summary: Get all apartments with average rating, review count, and cover image
  *     tags: [Apartments]
  *     responses:
  *       200:
@@ -25,11 +25,22 @@ router.get("/", async (req, res) => {
         a.landlord,
         a.units,
         a.built,
+        a.built AS yearBuilt,
+        a.image_url AS imageUrl,
+        a.image_url AS img,
         COALESCE(ROUND(AVG(r.rating), 1), 0) AS rating,
         COUNT(r.id) AS reviews
       FROM apartments a
       LEFT JOIN reviews r ON r.apt_id = a.id
-      GROUP BY a.id, a.name, a.address, a.neighbourhood, a.landlord, a.units, a.built
+      GROUP BY
+        a.id,
+        a.name,
+        a.address,
+        a.neighbourhood,
+        a.landlord,
+        a.units,
+        a.built,
+        a.image_url
       ORDER BY rating DESC
     `);
 
@@ -45,7 +56,7 @@ router.get("/", async (req, res) => {
  * @swagger
  * /api/apartments/{id}:
  *   get:
- *     summary: Get one apartment with reviews and comments
+ *     summary: Get one apartment with reviews, comments, and cover image
  *     tags: [Apartments]
  *     parameters:
  *       - in: path
@@ -72,12 +83,23 @@ router.get("/:id", async (req, res) => {
         a.landlord,
         a.units,
         a.built,
+        a.built AS yearBuilt,
+        a.image_url AS imageUrl,
+        a.image_url AS img,
         COALESCE(ROUND(AVG(r.rating), 1), 0) AS rating,
-        COUNT(r.id) AS reviewCount
+        COUNT(r.id) AS reviews
       FROM apartments a
       LEFT JOIN reviews r ON r.apt_id = a.id
       WHERE a.id = ?
-      GROUP BY a.id, a.name, a.address, a.neighbourhood, a.landlord, a.units, a.built
+      GROUP BY
+        a.id,
+        a.name,
+        a.address,
+        a.neighbourhood,
+        a.landlord,
+        a.units,
+        a.built,
+        a.image_url
       `,
       [req.params.id]
     );
@@ -98,6 +120,7 @@ router.get("/:id", async (req, res) => {
         r.body,
         r.created AS date,
         r.image_url AS imageUrl,
+        r.image_url AS img,
         u.name AS author,
         u.initials AS authorInitials
       FROM reviews r
@@ -134,7 +157,9 @@ router.get("/:id", async (req, res) => {
 
     res.json({
       ...apartment,
-      reviews: reviewsWithComments,
+      reviewsList: reviewsWithComments,
+      reviewItems: reviewsWithComments,
+      reviewsData: reviewsWithComments,
     });
   } catch (error) {
     res.status(500).json({
@@ -185,6 +210,7 @@ router.get("/:id/reviews", async (req, res) => {
         r.body,
         r.created AS date,
         r.image_url AS imageUrl,
+        r.image_url AS img,
         u.name AS author,
         u.initials AS authorInitials
       FROM reviews r
@@ -297,6 +323,7 @@ router.post("/:id/reviews", auth, async (req, res) => {
         r.body,
         r.created AS date,
         r.image_url AS imageUrl,
+        r.image_url AS img,
         u.name AS author,
         u.initials AS authorInitials
       FROM reviews r

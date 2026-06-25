@@ -1,113 +1,110 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { initialUsers } from "../data/mockData";
+import { apiFetch } from "../api/client";
 
-const AuthContext = createContext();
-
-const USERS_KEY = "tenanttrails_users";
-const CURRENT_USER_KEY = "tenanttrails_current_user";
-
-function loadUsers() {
-  const savedUsers = localStorage.getItem(USERS_KEY);
-
-  if (savedUsers) {
-    return JSON.parse(savedUsers);
-  }
-
-  localStorage.setItem(USERS_KEY, JSON.stringify(initialUsers));
-  return initialUsers;
-}
-
-function loadCurrentUser() {
-  const savedUser = localStorage.getItem(CURRENT_USER_KEY);
-  return savedUser ? JSON.parse(savedUser) : null;
-}
+const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [users, setUsers] = useState(loadUsers);
-  const [user, setUser] = useState(loadCurrentUser);
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
-    localStorage.setItem(USERS_KEY, JSON.stringify(users));
-  }, [users]);
+    let ignore = false;
 
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-    } else {
-      localStorage.removeItem(CURRENT_USER_KEY);
+    async function checkLoggedInUser() {
+      try {
+        const data = await apiFetch("/api/auth/me");
+
+        if (!ignore) {
+          setUser(data.user);
+        }
+      } catch {
+        if (!ignore) {
+          setUser(null);
+        }
+      } finally {
+        if (!ignore) {
+          setAuthLoading(false);
+        }
+      }
     }
-  }, [user]);
 
-  function login(email, password) {
-    const foundUser = users.find(
-      (storedUser) =>
-        storedUser.email.toLowerCase() === email.trim().toLowerCase() &&
-        storedUser.password === password
-    );
+    checkLoggedInUser();
 
-    if (!foundUser) {
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  async function login(email, password) {
+    try {
+      const data = await apiFetch("/api/auth/login", {
+        method: "POST",
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      setUser(data.user);
+
+      return {
+        success: true,
+        user: data.user,
+      };
+    } catch (error) {
       return {
         success: false,
-        message: "Invalid email or password.",
+        message: error.message,
       };
     }
-
-    const safeUser = {
-      id: foundUser.id,
-      name: foundUser.name,
-      email: foundUser.email,
-    };
-
-    setUser(safeUser);
-
-    return {
-      success: true,
-      user: safeUser,
-    };
   }
 
-  function signup(name, email, password) {
-    const emailExists = users.some(
-      (storedUser) =>
-        storedUser.email.toLowerCase() === email.trim().toLowerCase()
-    );
+  async function signup(name, email, password) {
+    try {
+      const data = await apiFetch("/api/auth/signup", {
+        method: "POST",
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+        }),
+      });
 
-    if (emailExists) {
+      setUser(data.user);
+
+      return {
+        success: true,
+        user: data.user,
+      };
+    } catch (error) {
       return {
         success: false,
-        message: "An account with this email already exists.",
+        message: error.message,
       };
     }
-
-    const newUser = {
-      id: Date.now(),
-      name: name.trim(),
-      email: email.trim().toLowerCase(),
-      password,
-    };
-
-    setUsers((currentUsers) => [...currentUsers, newUser]);
-
-    const safeUser = {
-      id: newUser.id,
-      name: newUser.name,
-      email: newUser.email,
-    };
-
-    setUser(safeUser);
-
-    return {
-      success: true,
-      user: safeUser,
-    };
   }
 
-  function logout() {
-    setUser(null);
+  async function logout() {
+    try {
+      await apiFetch("/api/auth/logout", {
+        method: "POST",
+      });
+    } finally {
+      setUser(null);
+    }
   }
 
   return (
-    <AuthContext.Provider value={{ user, users, login, signup, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        authLoading,
+        login,
+        signup,
+        logout,
+        setUser,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

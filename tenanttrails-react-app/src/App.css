@@ -1087,3 +1087,83 @@
     width: calc(100% - 32px);
   }
 }
+.loading-state {
+  width: 880px;
+  margin: 40px auto;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.api-error {
+  margin: 12px 0;
+  padding: 10px 12px;
+  border: 1px solid #fecaca;
+  border-radius: 7px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.auth-submit:disabled,
+.submit-review-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.review-image {
+  width: 100%;
+  max-height: 260px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-top: 12px;
+  border: 1px solid #e5eaf2;
+}
+
+.review-card-body {
+  margin-top: 10px;
+}
+
+.review-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.edit-review-btn {
+  border: none;
+  background: #eaf3ff;
+  color: #2563eb;
+  border-radius: 5px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.file-input {
+  width: 100%;
+  border: 1px dashed #cbd5e1;
+  border-radius: 7px;
+  padding: 8px;
+  color: #475569;
+  font-size: 12px;
+  background: #f8fafc;
+}
+
+.current-image-preview {
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+  border-radius: 7px;
+  margin-top: 10px;
+  border: 1px solid #e5eaf2;
+}
+
+.selected-file {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+}

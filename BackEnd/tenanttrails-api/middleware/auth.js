@@ -4,7 +4,7 @@ export function auth(req, res, next) {
   const cookieToken = req.cookies?.token;
 
   // Fallback for Postman/Swagger manual testing.
-  // Lab 6 frontend should use the httpOnly cookie.
+  // Lab 6 frontend use the httpOnly cookie.
   const header = req.headers.authorization;
   const bearerToken =
     header && header.startsWith("Bearer ") ? header.split(" ")[1] : null;

@@ -1,27 +1,95 @@
 import { Link, useNavigate } from "react-router-dom";
-import { apartments } from "../data/mockData";
+import { useCallback, useEffect, useState } from "react";
+import { apiFetch } from "../api/client";
 import { useAuth } from "../context/AuthContext";
-import { useReviews } from "../context/ReviewsContext";
 import ReviewCard from "../components/ReviewCard";
+import ReviewDialog from "../components/ReviewDialog";
 
 function Profile() {
   const { user, logout } = useAuth();
-  const { reviews, deleteReview } = useReviews();
   const navigate = useNavigate();
 
-  const myReviews = reviews.filter((review) => review.userId === user.id);
-  const myCommentsCount = 3;
+  const [profileUser, setProfileUser] = useState(user);
+  const [reviews, setReviews] = useState([]);
+  const [editingReview, setEditingReview] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  function getApartmentName(apartmentId) {
-    return (
-      apartments.find((apartment) => apartment.id === apartmentId)?.name ||
-      "Unknown apartment"
-    );
+  const loadProfile = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const data = await apiFetch("/api/profile");
+
+      setProfileUser(data.user);
+      setReviews(data.reviews || []);
+    } catch (loadError) {
+      setError(loadError.message || "Could not load profile.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
+
+  async function handleLogout() {
+    await logout();
+    navigate("/login");
   }
 
-  function handleLogout() {
-    logout();
-    navigate("/login");
+  async function uploadReviewImage(imageFile) {
+    const formData = new FormData();
+    formData.append("image", imageFile);
+
+    const data = await apiFetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    return data.url;
+  }
+
+  async function handleEditReview(reviewData) {
+    let imageUrl = reviewData.imageUrl || null;
+
+    if (reviewData.imageFile) {
+      imageUrl = await uploadReviewImage(reviewData.imageFile);
+    }
+
+    await apiFetch(`/api/reviews/${editingReview.id}`, {
+      method: "PUT",
+      body: JSON.stringify({
+        rating: reviewData.rating,
+        body: reviewData.body,
+        imageUrl,
+      }),
+    });
+
+    setEditingReview(null);
+    await loadProfile();
+  }
+
+  async function handleDeleteReview(reviewId) {
+    const confirmed = window.confirm("Delete this review?");
+
+    if (!confirmed) return;
+
+    await apiFetch(`/api/reviews/${reviewId}`, {
+      method: "DELETE",
+    });
+
+    await loadProfile();
+  }
+
+  if (loading) {
+    return (
+      <main className="dashboard-page">
+        <p className="loading-state">Loading profile...</p>
+      </main>
+    );
   }
 
   return (
@@ -42,8 +110,10 @@ function Profile() {
 
         <div className="dashboard-user">
           <Link to="/profile" className="avatar-link">
-            <div className="avatar">{user?.name?.charAt(0) || "U"}</div>
-            <span>{user?.name}</span>
+            <div className="avatar">
+              {profileUser?.initials || profileUser?.name?.charAt(0) || "U"}
+            </div>
+            <span>{profileUser?.name}</span>
           </Link>
           <button type="button" onClick={handleLogout}>
             Sign out
@@ -56,29 +126,32 @@ function Profile() {
           ← Back to apartments
         </Link>
 
+        {error && <p className="api-error">{error}</p>}
+
         <section className="profile-header-card">
           <div className="profile-main">
             <div className="profile-avatar">
-              {user?.name
-                ?.split(" ")
-                .map((part) => part.charAt(0))
-                .join("")
-                .slice(0, 2)}
+              {profileUser?.initials ||
+                profileUser?.name
+                  ?.split(" ")
+                  .map((part) => part.charAt(0))
+                  .join("")
+                  .slice(0, 2)}
             </div>
 
             <div>
-              <h1>{user.name}</h1>
-              <p>{user.email}</p>
+              <h1>{profileUser?.name}</h1>
+              <p>{profileUser?.email}</p>
             </div>
           </div>
 
           <div className="profile-stats">
             <div>
-              <strong>{myReviews.length}</strong>
+              <strong>{reviews.length}</strong>
               <span>Reviews</span>
             </div>
             <div>
-              <strong>{myCommentsCount}</strong>
+              <strong>0</strong>
               <span>Comments</span>
             </div>
           </div>
@@ -87,31 +160,46 @@ function Profile() {
         <h2>Your Reviews</h2>
 
         <div className="profile-review-list">
-          {myReviews.map((review) => (
+          {reviews.map((review) => (
             <section className="profile-review-item" key={review.id}>
               <div className="profile-review-top">
-                <h3>{getApartmentName(review.apartmentId)}</h3>
+                <h3>{review.apartmentName || "Unknown apartment"}</h3>
 
                 <div className="profile-review-actions">
-                  <Link to={`/apartment/${review.apartmentId}`}>View</Link>
-                  <button type="button">
+                  <Link to={`/apartment/${review.aptId}`}>View</Link>
+                  <button type="button" onClick={() => setEditingReview(review)}>
                     Edit
                   </button>
-                  <button type="button" onClick={() => deleteReview(review.id)}>
+                  <button type="button" onClick={() => handleDeleteReview(review.id)}>
                     Delete
                   </button>
                 </div>
               </div>
 
-              <ReviewCard {...review} />
+              <ReviewCard
+                {...review}
+                author={profileUser?.name}
+                canEdit={false}
+              />
             </section>
           ))}
 
-          {myReviews.length === 0 && (
+          {reviews.length === 0 && (
             <p className="empty-state">You have not written any reviews yet.</p>
           )}
         </div>
       </section>
+
+      {editingReview && (
+        <div className="modal-overlay" onClick={() => setEditingReview(null)}>
+          <ReviewDialog
+            title="Edit Review"
+            initialReview={editingReview}
+            onClose={() => setEditingReview(null)}
+            onSubmit={handleEditReview}
+          />
+        </div>
+      )}
     </main>
   );
 }

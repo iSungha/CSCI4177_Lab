@@ -1,6 +1,18 @@
+import { optimizedImage } from "../api/client";
 import StarRating from "./StarRating";
 
-function ReviewCard({ rating, body, date, author, onDelete, showDelete = false }) {
+function ReviewCard({
+  rating,
+  body,
+  date,
+  author,
+  imageUrl,
+  canEdit = false,
+  onEdit,
+  onDelete,
+}) {
+  const displayRating = Number(rating || 0);
+
   return (
     <article className="review-card">
       <div className="review-header">
@@ -9,15 +21,30 @@ function ReviewCard({ rating, body, date, author, onDelete, showDelete = false }
           <span>{date}</span>
         </div>
 
-        <StarRating rating={rating} />
+        <StarRating rating={displayRating} />
       </div>
 
-      <p>{body}</p>
+      {imageUrl && (
+        <img
+          src={optimizedImage(imageUrl, 700)}
+          alt="Review attachment"
+          className="review-image"
+          loading="lazy"
+        />
+      )}
 
-      {showDelete && (
-        <button type="button" className="delete-review-btn" onClick={onDelete}>
-          Delete
-        </button>
+      <p className="review-card-body">{body}</p>
+
+      {canEdit && (
+        <div className="review-actions">
+          <button type="button" className="edit-review-btn" onClick={onEdit}>
+            Edit
+          </button>
+
+          <button type="button" className="delete-review-btn" onClick={onDelete}>
+            Delete
+          </button>
+        </div>
       )}
     </article>
   );

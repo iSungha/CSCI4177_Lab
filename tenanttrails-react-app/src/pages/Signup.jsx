@@ -5,50 +5,64 @@ import { useAuth } from "../context/AuthContext";
 function Signup() {
   const navigate = useNavigate();
   const { signup } = useAuth();
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errors, setErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
 
   function validate() {
     const nextErrors = {};
+
     if (!name.trim()) {
       nextErrors.name = "Name is required.";
     }
+
     if (!email.trim()) {
       nextErrors.email = "Email is required.";
-    } 
-    else if (!email.includes("@")) {
+    } else if (!email.includes("@")) {
       nextErrors.email = "Enter a valid email.";
     }
+
     if (!password) {
       nextErrors.password = "Password is required.";
-    } 
-    else if (password.length < 6) {
+    } else if (password.length < 6) {
       nextErrors.password = "Password must be at least 6 characters.";
     }
+
     if (!confirmPassword) {
       nextErrors.confirmPassword = "Confirm your password.";
-    } 
-    else if (password !== confirmPassword) {
+    } else if (password !== confirmPassword) {
       nextErrors.confirmPassword = "Passwords do not match.";
     }
+
     return nextErrors;
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
+
     const validationErrors = validate();
+
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
-    const result = signup(name, email, password);
+
+    setSubmitting(true);
+    setErrors({});
+
+    const result = await signup(name, email, password);
+
+    setSubmitting(false);
+
     if (!result.success) {
       setErrors({ form: result.message });
       return;
     }
+
     navigate("/dashboard", {
       state: { message: `Welcome, ${result.user.name}!` },
     });
@@ -120,8 +134,8 @@ function Signup() {
             )}
           </div>
 
-          <button type="submit" className="auth-submit">
-            Create Account
+          <button type="submit" className="auth-submit" disabled={submitting}>
+            {submitting ? "Creating..." : "Create Account"}
           </button>
         </form>
 

@@ -1,8 +1,7 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useState } from "react";
-import { apartments } from "../data/mockData";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { apiFetch } from "../api/client";
 import { useAuth } from "../context/AuthContext";
-import { useReviews } from "../context/ReviewsContext";
 import ApartmentHeader from "../components/ApartmentHeader";
 import AISummary from "../components/AISummary";
 import ReviewCard from "../components/ReviewCard";
@@ -12,36 +11,155 @@ function ApartmentDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const { reviews, addReview } = useReviews();
+
+  const [apartment, setApartment] = useState(null);
+  const [reviews, setReviews] = useState([]);
   const [showReviewDialog, setShowReviewDialog] = useState(false);
+  const [editingReview, setEditingReview] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const apartment = apartments.find((item) => item.id === Number(id));
+  const loadApartment = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
 
-  if (!apartment) {
+      const [apartmentData, reviewData] = await Promise.all([
+        apiFetch(`/api/apartments/${id}`),
+        apiFetch(`/api/apartments/${id}/reviews`),
+      ]);
+
+      setApartment(apartmentData);
+      setReviews(reviewData);
+    } catch (loadError) {
+      setError(loadError.message || "Could not load apartment.");
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    loadApartment();
+  }, [loadApartment]);
+
+  const summary = useMemo(() => {
+    if (!apartment) return "";
+
+    if (reviews.length === 0) {
+      return "No tenant reviews have been submitted for this apartment yet. Be the first to add one.";
+    }
+
+    return `TenantTrails has ${reviews.length} review${
+      reviews.length === 1 ? "" : "s"
+    } for this apartment. Reviews are stored in the database and loaded through the API.`;
+  }, [apartment, reviews]);
+
+  const issues = useMemo(() => {
+    if (!apartment) return [];
+
+    return [
+      apartment.neighbourhood || "Halifax",
+      apartment.landlord || "Landlord listed",
+      `${reviews.length} review${reviews.length === 1 ? "" : "s"}`,
+    ];
+  }, [apartment, reviews]);
+
+  async function handleLogout() {
+    await logout();
+    navigate("/login");
+  }
+
+  async function uploadReviewImage(imageFile) {
+    const formData = new FormData();
+    formData.append("image", imageFile);
+
+    const data = await apiFetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    return data.url;
+  }
+
+  async function handleSubmitReview(reviewData) {
+    let imageUrl = reviewData.imageUrl || null;
+
+    if (reviewData.imageFile) {
+      imageUrl = await uploadReviewImage(reviewData.imageFile);
+    }
+
+    await apiFetch(`/api/apartments/${id}/reviews`, {
+      method: "POST",
+      body: JSON.stringify({
+        rating: reviewData.rating,
+        body: reviewData.body,
+        imageUrl,
+      }),
+    });
+
+    await loadApartment();
+  }
+
+  async function handleEditReview(reviewData) {
+    let imageUrl = reviewData.imageUrl || null;
+
+    if (reviewData.imageFile) {
+      imageUrl = await uploadReviewImage(reviewData.imageFile);
+    }
+
+    await apiFetch(`/api/reviews/${editingReview.id}`, {
+      method: "PUT",
+      body: JSON.stringify({
+        rating: reviewData.rating,
+        body: reviewData.body,
+        imageUrl,
+      }),
+    });
+
+    setEditingReview(null);
+    await loadApartment();
+  }
+
+  async function handleDeleteReview(reviewId) {
+    const confirmed = window.confirm("Delete this review?");
+
+    if (!confirmed) return;
+
+    await apiFetch(`/api/reviews/${reviewId}`, {
+      method: "DELETE",
+    });
+
+    await loadApartment();
+  }
+
+  if (loading) {
     return (
       <main className="dashboard-page">
-        <p>Apartment not found.</p>
-        <Link to="/dashboard">Back to dashboard</Link>
+        <p className="loading-state">Loading apartment...</p>
       </main>
     );
   }
 
-  const apartmentReviews = reviews.filter(
-    (review) => review.apartmentId === apartment.id
-  );
-
-  function handleLogout() {
-    logout();
-    navigate("/login");
+  if (error) {
+    return (
+      <main className="dashboard-page">
+        <section className="detail-content">
+          <p className="api-error">{error}</p>
+          <Link to="/dashboard">Back to dashboard</Link>
+        </section>
+      </main>
+    );
   }
 
-  function handleSubmitReview(reviewData) {
-    addReview({
-      ...reviewData,
-      apartmentId: apartment.id,
-      userId: user.id,
-      author: user.name,
-    });
+  if (!apartment) {
+    return (
+      <main className="dashboard-page">
+        <section className="detail-content">
+          <p>Apartment not found.</p>
+          <Link to="/dashboard">Back to dashboard</Link>
+        </section>
+      </main>
+    );
   }
 
   return (
@@ -62,7 +180,7 @@ function ApartmentDetail() {
 
         <div className="dashboard-user">
           <Link to="/profile" className="avatar-link">
-            <div className="avatar">{user?.name?.charAt(0) || "U"}</div>
+            <div className="avatar">{user?.initials || user?.name?.charAt(0) || "U"}</div>
             <span>{user?.name}</span>
           </Link>
           <button type="button" onClick={handleLogout}>
@@ -76,18 +194,20 @@ function ApartmentDetail() {
           ← Back to all apartments
         </Link>
 
-        <ApartmentHeader apartment={apartment} />
+        <ApartmentHeader
+          apartment={{
+            ...apartment,
+            reviews: reviews.length,
+          }}
+        />
 
         <div className="detail-grid">
           <div>
-            <AISummary
-              summary={apartment.aiSummary}
-              issues={apartment.aiIssues}
-            />
+            <AISummary summary={summary} issues={issues} />
 
             <section className="reviews-section">
               <div className="reviews-title-row">
-                <h2>Reviews ({apartmentReviews.length})</h2>
+                <h2>Reviews ({reviews.length})</h2>
                 <button
                   type="button"
                   className="small-outline-btn"
@@ -97,11 +217,17 @@ function ApartmentDetail() {
                 </button>
               </div>
 
-              {apartmentReviews.map((review) => (
-                <ReviewCard key={review.id} {...review} />
+              {reviews.map((review) => (
+                <ReviewCard
+                  key={review.id}
+                  {...review}
+                  canEdit={Number(review.userId) === Number(user.id)}
+                  onEdit={() => setEditingReview(review)}
+                  onDelete={() => handleDeleteReview(review.id)}
+                />
               ))}
 
-              {apartmentReviews.length === 0 && (
+              {reviews.length === 0 && (
                 <p className="empty-state">No reviews yet. Be the first.</p>
               )}
             </section>
@@ -121,7 +247,7 @@ function ApartmentDetail() {
                 </div>
                 <div>
                   <dt>Year built</dt>
-                  <dd>{apartment.yearBuilt}</dd>
+                  <dd>{apartment.yearBuilt || apartment.built}</dd>
                 </div>
                 <div>
                   <dt>Neighbourhood</dt>
@@ -132,20 +258,24 @@ function ApartmentDetail() {
 
             <section className="property-card">
               <h3>Rating Breakdown</h3>
-              {[5, 4, 3, 2, 1].map((star) => (
-                <div className="rating-row" key={star}>
-                  <span>{star}★</span>
-                  <div className="rating-line">
-                    <div
-                      style={{
-                        width:
-                          star === Math.round(apartment.rating) ? "72%" : "8%",
-                      }}
-                    />
+              {[5, 4, 3, 2, 1].map((star) => {
+                const count = reviews.filter(
+                  (review) => Math.round(Number(review.rating)) === star
+                ).length;
+
+                const width =
+                  reviews.length === 0 ? 0 : Math.round((count / reviews.length) * 100);
+
+                return (
+                  <div className="rating-row" key={star}>
+                    <span>{star}★</span>
+                    <div className="rating-line">
+                      <div style={{ width: `${width}%` }} />
+                    </div>
+                    <span>{count}</span>
                   </div>
-                  <span>{star === Math.round(apartment.rating) ? 1 : 0}</span>
-                </div>
-              ))}
+                );
+              })}
             </section>
 
             <button
@@ -167,6 +297,17 @@ function ApartmentDetail() {
           <ReviewDialog
             onClose={() => setShowReviewDialog(false)}
             onSubmit={handleSubmitReview}
+          />
+        </div>
+      )}
+
+      {editingReview && (
+        <div className="modal-overlay" onClick={() => setEditingReview(null)}>
+          <ReviewDialog
+            title="Edit Review"
+            initialReview={editingReview}
+            onClose={() => setEditingReview(null)}
+            onSubmit={handleEditReview}
           />
         </div>
       )}
