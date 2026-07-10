@@ -6,18 +6,38 @@ import { auth } from "../middleware/auth.js";
 
 const router = express.Router();
 
+const WEEK = 7 * 24 * 60 * 60 * 1000;
+
 function signToken(id) {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: "7d",
-  });
+  return jwt.sign(
+    {
+      id,
+    },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: "7d",
+    }
+  );
 }
 
 function cookieOptions() {
+  const production = process.env.NODE_ENV === "production";
+
   return {
     httpOnly: true,
-    sameSite: "lax",
-    secure: false,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+    sameSite: production ? "none" : "lax",
+    secure: production,
+    maxAge: WEEK,
+  };
+}
+
+function clearCookieOptions() {
+  const production = process.env.NODE_ENV === "production";
+
+  return {
+    httpOnly: true,
+    sameSite: production ? "none" : "lax",
+    secure: production,
   };
 }
 
@@ -37,32 +57,28 @@ function cookieOptions() {
  *             properties:
  *               name:
  *                 type: string
- *                 example: Test User
+ *                 example: Demo User
  *               email:
  *                 type: string
- *                 example: testuser@dal.ca
+ *                 example: demo@dal.ca
  *               password:
  *                 type: string
  *                 example: password123
  *     responses:
  *       201:
- *         description: User created and auth cookie set
+ *         description: User created
  *       400:
- *         description: Invalid input
+ *         description: Invalid request
+ *       409:
+ *         description: Email already exists
  */
 router.post("/signup", async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    if (!name || !email || !password) {
+    if (!name?.trim() || !email?.trim() || !password) {
       return res.status(400).json({
         error: "Name, email, and password are required",
-      });
-    }
-
-    if (!email.includes("@")) {
-      return res.status(400).json({
-        error: "Enter a valid email",
       });
     }
 
@@ -72,36 +88,43 @@ router.post("/signup", async (req, res) => {
       });
     }
 
-    const normalizedEmail = email.toLowerCase();
+    const cleanName = name.trim();
+    const normalizedEmail = email.trim().toLowerCase();
 
     const [[existingUser]] = await pool.query(
-      "SELECT id FROM users WHERE email = ?",
+      `
+      SELECT id
+      FROM users
+      WHERE email = ?
+      `,
       [normalizedEmail]
     );
 
     if (existingUser) {
-      return res.status(400).json({
-        error: "Email is already registered",
+      return res.status(409).json({
+        error: "An account with this email already exists",
       });
     }
 
-    const hash = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    const initials = name
-      .split(" ")
-      .filter(Boolean)
+    const initials = cleanName
+      .split(/\s+/)
       .map((part) => part.charAt(0).toUpperCase())
       .join("")
       .slice(0, 2);
 
     const [result] = await pool.query(
-      "INSERT INTO users (name, email, password, initials) VALUES (?, ?, ?, ?)",
-      [name, normalizedEmail, hash, initials]
+      `
+      INSERT INTO users (name, email, password, initials)
+      VALUES (?, ?, ?, ?)
+      `,
+      [cleanName, normalizedEmail, hashedPassword, initials]
     );
 
     const user = {
       id: result.insertId,
-      name,
+      name: cleanName,
       email: normalizedEmail,
       initials,
     };
@@ -125,7 +148,7 @@ router.post("/signup", async (req, res) => {
  * @swagger
  * /api/auth/login:
  *   post:
- *     summary: Login and set an httpOnly auth cookie
+ *     summary: Log in
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -137,67 +160,86 @@ router.post("/signup", async (req, res) => {
  *             properties:
  *               email:
  *                 type: string
- *                 example: testuser@dal.ca
+ *                 example: demo@dal.ca
  *               password:
  *                 type: string
  *                 example: password123
  *     responses:
  *       200:
- *         description: Login successful and cookie set
+ *         description: Login successful
  *       401:
- *         description: Invalid credentials
+ *         description: Invalid email or password
  */
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
+    if (!email?.trim() || !password) {
       return res.status(400).json({
         error: "Email and password are required",
       });
     }
 
-    const normalizedEmail = email.toLowerCase();
+    const normalizedEmail = email.trim().toLowerCase();
 
-    const [[userRow]] = await pool.query(
-      "SELECT * FROM users WHERE email = ?",
+    const [[storedUser]] = await pool.query(
+      `
+      SELECT
+        id,
+        name,
+        email,
+        password,
+        initials
+      FROM users
+      WHERE email = ?
+      `,
       [normalizedEmail]
     );
 
-    if (!userRow) {
+    if (!storedUser) {
       return res.status(401).json({
-        error: "Invalid credentials",
+        error: "Invalid email or password",
       });
     }
 
     let passwordMatches = false;
 
-    if (userRow.password.startsWith("$2")) {
-      passwordMatches = await bcrypt.compare(password, userRow.password);
-    } else {
-      // Helps if old Lab 4 seed users still have plain text passwords.
-      passwordMatches = password === userRow.password;
+    try {
+      passwordMatches = await bcrypt.compare(
+        password,
+        storedUser.password
+      );
+    } catch {
+      passwordMatches = false;
+    }
 
-      if (passwordMatches) {
-        const hash = await bcrypt.hash(password, 10);
-        await pool.query("UPDATE users SET password = ? WHERE id = ?", [
-          hash,
-          userRow.id,
-        ]);
-      }
+    // Supports old Lab 4/5 plaintext rows and migrates them to bcrypt.
+    if (!passwordMatches && storedUser.password === password) {
+      passwordMatches = true;
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      await pool.query(
+        `
+        UPDATE users
+        SET password = ?
+        WHERE id = ?
+        `,
+        [hashedPassword, storedUser.id]
+      );
     }
 
     if (!passwordMatches) {
       return res.status(401).json({
-        error: "Invalid credentials",
+        error: "Invalid email or password",
       });
     }
 
     const user = {
-      id: userRow.id,
-      name: userRow.name,
-      email: userRow.email,
-      initials: userRow.initials,
+      id: storedUser.id,
+      name: storedUser.name,
+      email: storedUser.email,
+      initials: storedUser.initials,
     };
 
     const token = signToken(user.id);
@@ -219,7 +261,7 @@ router.post("/login", async (req, res) => {
  * @swagger
  * /api/auth/me:
  *   get:
- *     summary: Get the currently logged-in user
+ *     summary: Get the current logged-in user
  *     tags: [Auth]
  *     security:
  *       - cookieAuth: []
@@ -233,7 +275,15 @@ router.post("/login", async (req, res) => {
 router.get("/me", auth, async (req, res) => {
   try {
     const [[user]] = await pool.query(
-      "SELECT id, name, email, initials FROM users WHERE id = ?",
+      `
+      SELECT
+        id,
+        name,
+        email,
+        initials
+      FROM users
+      WHERE id = ?
+      `,
       [req.user.id]
     );
 
@@ -257,22 +307,17 @@ router.get("/me", auth, async (req, res) => {
  * @swagger
  * /api/auth/logout:
  *   post:
- *     summary: Logout and clear the auth cookie
+ *     summary: Log out
  *     tags: [Auth]
  *     responses:
  *       200:
- *         description: Logged out
+ *         description: Logout successful
  */
 router.post("/logout", (req, res) => {
-  res.clearCookie("token", {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: false,
-  });
+  res.clearCookie("token", clearCookieOptions());
 
   res.json({
     ok: true,
-    message: "Logged out",
   });
 });
 
